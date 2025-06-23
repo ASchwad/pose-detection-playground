@@ -1,33 +1,37 @@
-import { Keypoint } from "@tensorflow-models/pose-detection";
+import { Keypoint } from '@tensorflow-models/pose-detection'
 
 type adjustKeypointsToOriginProps = {
-    keypoints: Keypoint[];
-    xScaleDownRatio?: number;
-    yScaleDownRatio?: number;
-    zScaleDownRatio?: number;
+  keypoints: Keypoint[]
+  xScaleDownRatio?: number
+  yScaleDownRatio?: number
+  zScaleDownRatio?: number
 }
 
-const scaleDefault = 35;
+const scaleDefault = 35
 
-export function adjustKeypointsToOrigin({keypoints, xScaleDownRatio = scaleDefault, yScaleDownRatio = scaleDefault, zScaleDownRatio = scaleDefault}: adjustKeypointsToOriginProps): Keypoint[] {
-    // Find the left_hip and right_hip keypoints
-    const leftHip = keypoints.find(point => point.name === 'left_hip');
-    const rightHip = keypoints.find(point => point.name === 'right_hip');
-    
-    if (!leftHip || !rightHip) {
-        return [];   
-    }
+export function adjustKeypointsToOrigin({
+  keypoints,
+  xScaleDownRatio = scaleDefault,
+  yScaleDownRatio = scaleDefault,
+  zScaleDownRatio = scaleDefault
+}: adjustKeypointsToOriginProps): Keypoint[] {
+  if (keypoints.length === 0) {
+    return []
+  }
 
-    // Calculate the midpoint between left_hip and right_hip
-    const originX = (leftHip.x + rightHip.x) / 2;
-    const originY = (leftHip.y + rightHip.y) / 2;
-    const originZ = (leftHip.z! + rightHip.z!) / 2;
+  // Calculate the center of all keypoints
+  const centerX =
+    keypoints.reduce((sum, point) => sum + point.x, 0) / keypoints.length
+  const centerY =
+    keypoints.reduce((sum, point) => sum + point.y, 0) / keypoints.length
+  const centerZ =
+    keypoints.reduce((sum, point) => sum + (point.z || 0), 0) / keypoints.length
 
-    // Adjust all points to have the origin at (0,0)
-    return keypoints.map(point => ({
-        ...point,
-        x: (point.x-originX)/ xScaleDownRatio,
-        y: - (point.y -originY) / yScaleDownRatio,
-        z: (point.z ? point.z - originZ : 0) / zScaleDownRatio
-    }));
+  // Center all points around (0,0,0) and apply scaling
+  return keypoints.map((point) => ({
+    ...point,
+    x: (point.x - centerX) / xScaleDownRatio,
+    y: -(point.y - centerY) / yScaleDownRatio, // Keep Y-axis inversion for proper 3D orientation
+    z: ((point.z || 0) - centerZ) / zScaleDownRatio
+  }))
 }

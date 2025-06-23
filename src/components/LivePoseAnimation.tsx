@@ -1,31 +1,31 @@
-import React, { useRef, useEffect } from 'react'
-import {
-  SupportedModels,
-  createDetector
-} from '@tensorflow-models/pose-detection'
-import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Sphere } from '@react-three/drei'
+import { Canvas } from '@react-three/fiber'
+import {
+  createDetector,
+  SupportedModels
+} from '@tensorflow-models/pose-detection'
+import React, { useEffect, useRef } from 'react'
 import { Mesh } from 'three'
 
 const keypointTypes = [
-  "nose",
-  "left_eye",
-  "right_eye",
-  "left_ear",
-  "right_ear",
-  "left_shoulder",
-  "right_shoulder",
-  "left_elbow",
-  "right_elbow",
-  "left_wrist",
-  "right_wrist",
-  "left_hip",
-  "right_hip",
-  "left_knee",
-  "right_knee",
-  "left_ankle",
-  "right_ankle"
-] 
+  'nose',
+  'left_eye',
+  'right_eye',
+  'left_ear',
+  'right_ear',
+  'left_shoulder',
+  'right_shoulder',
+  'left_elbow',
+  'right_elbow',
+  'left_wrist',
+  'right_wrist',
+  'left_hip',
+  'right_hip',
+  'left_knee',
+  'right_knee',
+  'left_ankle',
+  'right_ankle'
+]
 
 const LivePoseAnimation: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null) // Annotate with the type
@@ -59,14 +59,15 @@ const LivePoseAnimation: React.FC = () => {
               const video = videoRef.current
               if (video) {
                 const poses = await detector.estimatePoses(video)
-                if(sphereRefs.current !== null) {
-
-                  const updatedRefs = sphereRefs.current
+                if (sphereRefs.current !== null) {
                   // Do animation stuff here
                   poses.forEach(({ keypoints }) => {
                     keypoints.forEach((keypoint, index) => {
-                      sphereRefs.current[index]?.position.set((keypoint.x - 330) / 100, - (keypoint.y - 380) / 100, 0)
-
+                      sphereRefs.current[index]?.position.set(
+                        (keypoint.x - 330) / 100,
+                        -(keypoint.y - 380) / 100,
+                        0
+                      )
                     })
                   })
                 }
@@ -119,17 +120,17 @@ const LivePoseAnimation: React.FC = () => {
         height="480"
         ref={canvasRef}
       />
-      <Canvas style={{width: "800px", height: "800px"}}>
-      {keypointTypes.map((point, index) => (
-        <Sphere
-          key={index}
-          ref={(el) => sphereRefs.current?.push(el)}
-          position={[0,0,0]}
-          args={[0.2]}
-        >
-          <meshStandardMaterial color="orange" />
-        </Sphere>
-      ))}
+      <Canvas style={{ width: '800px', height: '800px' }}>
+        {keypointTypes.map((point, index) => (
+          <Sphere
+            key={index}
+            ref={(el) => sphereRefs.current?.push(el)}
+            position={[0, 0, 0]}
+            args={[0.2]}
+          >
+            <meshStandardMaterial color="orange" />
+          </Sphere>
+        ))}
         <ambientLight intensity={0.1} />
         <directionalLight position={[0, 0, 5]} color="red" />
         <OrbitControls />

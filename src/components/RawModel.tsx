@@ -8,91 +8,78 @@ Source: https://sketchfab.com/3d-models/dayo-miniroyaleio-rigged-f46755a3a4764f9
 Title: Dayo  - miniroyale.io - (Rigged)
 */
 
-import React, { useEffect, useRef, useState } from 'react'
-import { Sphere, useGLTF, Line } from '@react-three/drei'
+import { Box, Line, Sphere, useGLTF } from '@react-three/drei'
 import { Keypoint } from '@tensorflow-models/pose-detection'
-import { Mesh, Vector3 } from 'three'
+import { useEffect, useRef, useState } from 'react'
+import { Euler, Mesh, Quaternion, Vector3 } from 'three'
+
 import { adjustKeypointsToOrigin } from '@/lib/dimensionalCalculations'
 
-const keypointTypes = [
-  "nose",
-  "left_eye",
-  "right_eye",
-  "left_ear",
-  "right_ear",
-  "left_shoulder",
-  "right_shoulder",
-  "left_elbow",
-  "right_elbow",
-  "left_wrist",
-  "right_wrist",
-  "left_hip",
-  "right_hip",
-  "left_knee",
-  "right_knee",
-  "left_ankle",
-  "right_ankle"
-]
-
 const keypointTypes_blazepose = [
-  "nose",
-  "left_eye_inner",
-  "left_eye",
-  "left_eye_outer",
-  "right_eye_inner",
-  "right_eye",
-  "right_eye_outer",
-  "left_ear",
-  "right_ear",
-  "mouth_left",
-  "mouth_right",
-  "left_shoulder",
-  "right_shoulder",
-  "left_elbow",
-  "right_elbow",
-  "left_wrist",
-  "right_wrist",
-  "left_pinky",
-  "right_pinky",
-  "left_index",
-  "right_index",
-  "left_thumb",
-  "right_thumb",
-  "left_hip",
-  "right_hip",
-  "left_knee",
-  "right_knee",
-  "left_ankle",
-  "right_ankle",
-  "left_heel",
-  "right_heel",
-  "left_foot_index",
-  "right_foot_index"
+  'nose',
+  'left_eye_inner',
+  'left_eye',
+  'left_eye_outer',
+  'right_eye_inner',
+  'right_eye',
+  'right_eye_outer',
+  'left_ear',
+  'right_ear',
+  'mouth_left',
+  'mouth_right',
+  'left_shoulder',
+  'right_shoulder',
+  'left_elbow',
+  'right_elbow',
+  'left_wrist',
+  'right_wrist',
+  'left_pinky',
+  'right_pinky',
+  'left_index',
+  'right_index',
+  'left_thumb',
+  'right_thumb',
+  'left_hip',
+  'right_hip',
+  'left_knee',
+  'right_knee',
+  'left_ankle',
+  'right_ankle',
+  'left_heel',
+  'right_heel',
+  'left_foot_index',
+  'right_foot_index'
 ]
 
 // Define connections between keypoints
 const connections = [
   // Face
-  ["nose", "left_eye"],
-  ["nose", "right_eye"],
-  ["left_eye", "left_ear"],
-  ["right_eye", "right_ear"],
+  ['nose', 'left_eye'],
+  ['nose', 'right_eye'],
+  ['left_eye', 'left_ear'],
+  ['right_eye', 'right_ear'],
   // Arms
-  ["left_shoulder", "right_shoulder"],
-  ["left_shoulder", "left_elbow"],
-  ["right_shoulder", "right_elbow"],
-  ["left_elbow", "left_wrist"],
-  ["right_elbow", "right_wrist"],
+  ['left_shoulder', 'right_shoulder'],
+  ['left_shoulder', 'left_elbow'],
+  ['right_shoulder', 'right_elbow'],
+  ['left_elbow', 'left_wrist'],
+  ['right_elbow', 'right_wrist'],
   // Torso
-  ["left_shoulder", "left_hip"],
-  ["right_shoulder", "right_hip"],
-  ["left_hip", "right_hip"],
+  ['left_shoulder', 'left_hip'],
+  ['right_shoulder', 'right_hip'],
+  ['left_hip', 'right_hip'],
   // Legs
-  ["left_hip", "left_knee"],
-  ["right_hip", "right_knee"],
-  ["left_knee", "left_ankle"],
-  ["right_knee", "right_ankle"]
+  ['left_hip', 'left_knee'],
+  ['right_hip', 'right_knee'],
+  ['left_knee', 'left_ankle'],
+  ['right_knee', 'right_ankle']
 ] as const
+
+interface BoneData {
+  position: Vector3
+  rotation: Euler
+  length: number
+}
 
 interface RawModelProps {
   poseKeypoints: Keypoint[]
@@ -101,19 +88,34 @@ interface RawModelProps {
 export function RawModel({ poseKeypoints }: RawModelProps) {
   const sphereRefs = useRef<Mesh[]>([])
   const [linePoints, setLinePoints] = useState<[Vector3, Vector3][]>([])
+  const [bones, setBones] = useState<BoneData[]>([])
+  const [headPosition, setHeadPosition] = useState<Vector3>(new Vector3())
+  const [leftHandPosition, setLeftHandPosition] = useState<Vector3>(
+    new Vector3()
+  )
+  const [rightHandPosition, setRightHandPosition] = useState<Vector3>(
+    new Vector3()
+  )
 
   useEffect(() => {
-    const correctedKeypoints = adjustKeypointsToOrigin({ keypoints: poseKeypoints, zScaleDownRatio: 150 })
-    
+    const correctedKeypoints = adjustKeypointsToOrigin({
+      keypoints: poseKeypoints,
+      zScaleDownRatio: 150
+    })
+
     // Update sphere positions
     correctedKeypoints.forEach((keypoint, index) => {
-      sphereRefs.current[index]?.position.set(keypoint.x, keypoint.y, keypoint.z || 0)
+      sphereRefs.current[index]?.position.set(
+        keypoint.x,
+        keypoint.y,
+        keypoint.z || 0
+      )
     })
 
     // Create lines between connected points
     const newLinePoints = connections.map(([start, end]) => {
-      const startPoint = correctedKeypoints.find(k => k.name === start)
-      const endPoint = correctedKeypoints.find(k => k.name === end)
+      const startPoint = correctedKeypoints.find((k) => k.name === start)
+      const endPoint = correctedKeypoints.find((k) => k.name === end)
       if (startPoint && endPoint) {
         return [
           new Vector3(startPoint.x, startPoint.y, startPoint.z || 0),
@@ -123,28 +125,171 @@ export function RawModel({ poseKeypoints }: RawModelProps) {
       return [new Vector3(), new Vector3()] as [Vector3, Vector3]
     })
     setLinePoints(newLinePoints)
+
+    // Create bones (rectangles) between connected points
+    const newBones = connections
+      .map(([start, end]) => {
+        const startPoint = correctedKeypoints.find((k) => k.name === start)
+        const endPoint = correctedKeypoints.find((k) => k.name === end)
+
+        if (startPoint && endPoint) {
+          const startVec = new Vector3(
+            startPoint.x,
+            startPoint.y,
+            startPoint.z || 0
+          )
+          const endVec = new Vector3(endPoint.x, endPoint.y, endPoint.z || 0)
+
+          // Calculate midpoint position
+          const midpoint = new Vector3()
+            .addVectors(startVec, endVec)
+            .multiplyScalar(0.5)
+
+          // Calculate distance (length of bone)
+          const length = startVec.distanceTo(endVec)
+
+          // Calculate rotation to align bone with the line between points
+          const direction = new Vector3()
+            .subVectors(endVec, startVec)
+            .normalize()
+          const rotation = new Euler()
+
+          // Align the bone along the line between keypoints
+          // We want to rotate from the default Y-axis direction to our target direction
+          const up = new Vector3(0, 1, 0)
+
+          if (Math.abs(direction.dot(up)) < 0.99) {
+            // Cross product gives us the rotation axis
+            const axis = new Vector3().crossVectors(up, direction).normalize()
+            const angle = Math.acos(
+              Math.max(-1, Math.min(1, up.dot(direction)))
+            )
+
+            // Create a quaternion from axis and angle, then convert to Euler
+            const quaternion = new Quaternion().setFromAxisAngle(axis, angle)
+            rotation.setFromQuaternion(quaternion)
+          } else {
+            // Handle case where direction is nearly vertical
+            rotation.set(direction.y > 0 ? 0 : Math.PI, 0, 0)
+          }
+
+          return {
+            position: midpoint,
+            rotation,
+            length
+          }
+        }
+
+        return {
+          position: new Vector3(),
+          rotation: new Euler(),
+          length: 0
+        }
+      })
+      .filter((bone) => bone.length > 0)
+
+    setBones(newBones)
+
+    // Calculate head position (average of nose, eyes, and ears)
+    const headKeypoints = [
+      'nose',
+      'left_eye',
+      'right_eye',
+      'left_ear',
+      'right_ear'
+    ]
+    const headPoints = headKeypoints
+      .map((name) => correctedKeypoints.find((k) => k.name === name))
+      .filter((point) => point !== undefined)
+
+    if (headPoints.length > 0) {
+      const headCenter = headPoints
+        .reduce(
+          (acc, point) => acc.add(new Vector3(point.x, point.y, point.z || 0)),
+          new Vector3()
+        )
+        .divideScalar(headPoints.length)
+      setHeadPosition(headCenter)
+    }
+
+    // Calculate hand positions
+    const leftWrist = correctedKeypoints.find((k) => k.name === 'left_wrist')
+    const rightWrist = correctedKeypoints.find((k) => k.name === 'right_wrist')
+
+    if (leftWrist) {
+      setLeftHandPosition(
+        new Vector3(leftWrist.x, leftWrist.y, leftWrist.z || 0)
+      )
+    }
+    if (rightWrist) {
+      setRightHandPosition(
+        new Vector3(rightWrist.x, rightWrist.y, rightWrist.z || 0)
+      )
+    }
   }, [poseKeypoints])
 
   return (
     <>
-      {keypointTypes_blazepose.map((point, index) => (
+      {/* Keypoint spheres */}
+      {keypointTypes_blazepose.map((__point, index) => (
         <Sphere
           key={index}
           ref={(el) => {
             if (el) sphereRefs.current[index] = el
           }}
-          position={[0,0,0]}
-          args={[0.2]}
+          position={[0, 0, 0]}
+          args={[0.15]}
         >
           <meshStandardMaterial color="orange" />
         </Sphere>
       ))}
+
+      {/* Bone rectangles */}
+      {bones.map((bone, index) => (
+        <Box
+          key={`bone-${index}`}
+          position={[bone.position.x, bone.position.y, bone.position.z]}
+          rotation={[bone.rotation.x, bone.rotation.y, bone.rotation.z]}
+          args={[0.08, bone.length, 0.08]}
+        >
+          <meshStandardMaterial color="lightblue" />
+        </Box>
+      ))}
+
+      {/* Head */}
+      <Sphere
+        position={[headPosition.x, headPosition.y, headPosition.z]}
+        args={[1.2]}
+      >
+        <meshStandardMaterial color="peachpuff" />
+      </Sphere>
+
+      {/* Hands */}
+      <Sphere
+        position={[leftHandPosition.x, leftHandPosition.y, leftHandPosition.z]}
+        args={[0.15]}
+      >
+        <meshStandardMaterial color="peachpuff" />
+      </Sphere>
+      <Sphere
+        position={[
+          rightHandPosition.x,
+          rightHandPosition.y,
+          rightHandPosition.z
+        ]}
+        args={[0.15]}
+      >
+        <meshStandardMaterial color="peachpuff" />
+      </Sphere>
+
       {linePoints.map((points: [Vector3, Vector3], index: number) => (
         <Line
           key={`line-${index}`}
           points={points}
           color="white"
-          lineWidth={2}
+          lineWidth={1}
+          transparent
+          opacity={0.3}
         />
       ))}
     </>
