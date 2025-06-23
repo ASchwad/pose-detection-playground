@@ -29,8 +29,8 @@ const App = () => {
           <TabsTrigger value="3d_static_animation">
             3D Static Animation
           </TabsTrigger>
-          <TabsTrigger value="detection">Detection</TabsTrigger>
-          <TabsTrigger value="static">Static</TabsTrigger>
+          {/* <TabsTrigger value="detection">Detection</TabsTrigger>
+          <TabsTrigger value="static">Static</TabsTrigger> */}
         </TabsList>
         <TabsContent value="animation">
           <LivePoseAnimation />
@@ -41,12 +41,12 @@ const App = () => {
         <TabsContent value="3d_static_animation">
           <ThreeDimStaticPoseAnimation />
         </TabsContent>
-        <TabsContent value="detection">
+        {/* <TabsContent value="detection">
           <LivePoseDetector />
         </TabsContent>
         <TabsContent value="static">
           <StaticPoseDetector />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   )
