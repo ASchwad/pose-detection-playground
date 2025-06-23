@@ -1,15 +1,19 @@
-import { useEffect } from 'react'
-import LivePoseDetector from './LivePoseDetector'
-import StaticPoseDetector from './StaticPoseDetector'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+import '@tensorflow/tfjs-backend-webgl'
+
 import * as tf from '@tensorflow/tfjs-core'
+import { useEffect } from 'react'
+
 import LivePoseAnimation from './LivePoseAnimation'
+import LivePoseDetector from './LivePoseDetector'
 import StaticPoseAnimation from './StaticPoseAnimation'
+import StaticPoseDetector from './StaticPoseDetector'
 import ThreeDimStaticPoseAnimation from './ThreeDimStaticPoseAnimation'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 
 const App = () => {
   useEffect(() => {
     const waitForTF = async () => {
+      await tf.setBackend('webgl')
       await tf.ready()
       console.log('TF Ready')
     }
@@ -22,7 +26,9 @@ const App = () => {
         <TabsList>
           <TabsTrigger value="animation">Animation</TabsTrigger>
           <TabsTrigger value="static_animation">Static Animation</TabsTrigger>
-          <TabsTrigger value="3d_static_animation">3D Static Animation</TabsTrigger>
+          <TabsTrigger value="3d_static_animation">
+            3D Static Animation
+          </TabsTrigger>
           <TabsTrigger value="detection">Detection</TabsTrigger>
           <TabsTrigger value="static">Static</TabsTrigger>
         </TabsList>
@@ -36,7 +42,7 @@ const App = () => {
           <ThreeDimStaticPoseAnimation />
         </TabsContent>
         <TabsContent value="detection">
-          <LivePoseDetector/>
+          <LivePoseDetector />
         </TabsContent>
         <TabsContent value="static">
           <StaticPoseDetector />
